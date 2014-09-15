@@ -1,0 +1,10 @@
+[package]
+
+name = "aurora"
+version = "0.0.1"
+authors = ["Jens Nockert <jens@nockert.se>"]
+
+[lib]
+
+name = "aurora"
+path = "src/aurora.rs"
