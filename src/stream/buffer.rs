@@ -32,6 +32,17 @@ impl Stream for MemoryStream {
 
     return Some(write_len);
   }
+
+  fn try_skip(&mut self, amount: uint) -> Option<uint> {
+    if self.position >= self.buffer.len() { return None }
+
+    let skip_len = std::cmp::min(amount, self.buffer.len() - self.position);
+
+    self.position += skip_len;
+    assert!(self.position <= self.buffer.len());
+
+    return Some(skip_len);
+  }
 }
 
 #[cfg(test)]
@@ -39,7 +50,7 @@ mod tests {
   use stream;
   use stream::Stream;
   use super::MemoryStream;
-  
+
   #[test]
   fn test_read_u8() {
     let mut s = MemoryStream::new(vec![0x00u8, 0x01]);
@@ -120,6 +131,24 @@ mod tests {
 
     assert_eq!(s.read_be_uint_n(1), 0x00);
     assert_eq!(s.read_be_uint_n(2), 0x0102);
+    assert_eq!(s.read_be_uint_n(3), 0x030405);
+  }
+
+  #[test]
+  fn test_skip() {
+    let mut s = MemoryStream::new(vec![0x00u8, 0x01, 0x02, 0x03]);
+
+    s.skip(1);
+    assert_eq!(s.read_le_uint_n(3), 0x030201);
+
+    let mut s = MemoryStream::new(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
+
+    s.skip(3);
+    assert_eq!(s.read_le_uint_n(3), 0x050403);
+
+    let mut s = MemoryStream::new(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
+
+    s.skip(3);
     assert_eq!(s.read_be_uint_n(3), 0x030405);
   }
 

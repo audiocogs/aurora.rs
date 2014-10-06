@@ -34,11 +34,11 @@ pub trait Stream {
   /// When implementing this method on a new Stream, you are strongly
   /// encouraged not to return 0 if you can avoid it.
   fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint>;
+  fn try_skip(&mut self, amount: uint) -> Option<uint>;
 
   // Convenient helper methods based on the above methods
 
-  /// Reads exactly `length` bytes and gives you back a new vector of length
-  /// `length`.
+  /// Reads exactly the length of `buffer` and places them in `buffer`.
   fn read(&mut self, buffer: &mut [u8]) {
     let length = buffer.len();
 
@@ -47,12 +47,24 @@ pub trait Stream {
     }
   }
 
-  /// Reads at least `min` bytes and places them in `buf`.
+  /// Skips exactly `amount` bytes.
+  fn skip(&mut self, amount: uint) {
+    let mut skipped = 0;
+
+    while skipped < amount {
+      match self.try_skip(amount) {
+        Some(0) => fail!("Stream: Not progressing (TODO)"),
+        Some(n) => skipped += n,
+        None => fail!("Stream: Unexpected EOF (INPUT)")
+      }
+    }
+  }
+
+  /// Reads at least `min` bytes and places them in `buffer`.
   /// Returns the number of bytes read.
   ///
-  /// This will continue to call `read` until at least `min` bytes have been
-  /// read. If `read` returns 0 too many times, `NoProgress` will be
-  /// returned.
+  /// This will continue to call `try_read` until at least `min` bytes have been
+  /// read.
   fn read_at_least(&mut self, min: uint, buffer: &mut [u8]) -> uint {
     if min > buffer.len() { fail!("Stream: The buffer is too short (ARGUMENT)") }
 
