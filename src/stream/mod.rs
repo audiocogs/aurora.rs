@@ -1,7 +1,6 @@
 use std::mem;
 
 pub mod buffer;
-pub mod file;
 
 /// A trait for objects which are byte-oriented readable streams. Streams are
 /// defined by two methods, `read`, and `bus`. This function will block until
