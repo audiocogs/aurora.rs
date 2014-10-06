@@ -13,7 +13,7 @@ impl FileStream {
 }
 
 impl Stream for FileStream {
-  fn read(&mut self, buffer: &mut [u8]) -> Option<uint> {
+  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.file.eof() {
       return None;
     }

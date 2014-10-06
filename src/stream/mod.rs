@@ -33,9 +33,19 @@ pub trait Stream {
   ///
   /// When implementing this method on a new Stream, you are strongly
   /// encouraged not to return 0 if you can avoid it.
-  fn read(&mut self, buffer: &mut [u8]) -> Option<uint>;
+  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint>;
 
   // Convenient helper methods based on the above methods
+
+  /// Reads exactly `length` bytes and gives you back a new vector of length
+  /// `length`.
+  fn read(&mut self, buffer: &mut [u8]) {
+    let length = buffer.len();
+
+    if self.read_at_least(length, buffer) != length {
+      fail!("Stream: Unexpected length (BUG)");
+    }
+  }
 
   /// Reads at least `min` bytes and places them in `buf`.
   /// Returns the number of bytes read.
@@ -49,7 +59,7 @@ pub trait Stream {
     let mut read = 0;
 
     while read < min {
-      match self.read(buffer.mut_slice_from(read)) {
+      match self.try_read(buffer.mut_slice_from(read)) {
         Some(0) => fail!("Stream: Not progressing (TODO)"),
         Some(n) => read += n,
         None => fail!("Stream: Unexpected EOF (INPUT)")
@@ -59,21 +69,11 @@ pub trait Stream {
     return read;
   }
 
-  /// Reads exactly `length` bytes and gives you back a new vector of length
-  /// `length`.
-  fn read_exact(&mut self, buffer: &mut [u8]) {
-    let length = buffer.len();
-
-    if self.read_at_least(length, buffer) != length {
-      fail!("Stream: Unexpected length (BUG)");
-    }
-  }
-
   /// Reads a u8.
   fn read_u8(&mut self) -> u8 {
     let mut buffer = [0];
 
-    self.read_exact(buffer);
+    self.read(buffer);
 
     return buffer[0];
   }
@@ -82,7 +82,7 @@ pub trait Stream {
   fn read_ne_u16(&mut self) -> u16 {
     let mut buffer = [0, ..2];
 
-    self.read_exact(buffer);
+    self.read(buffer);
 
     return unsafe { mem::transmute::<[u8, ..2], [u16, ..1]>(buffer) }[0];
   }
@@ -101,7 +101,7 @@ pub trait Stream {
   fn read_ne_u32(&mut self) -> u32 {
     let mut buffer = [0, ..4];
 
-    self.read_exact(buffer);
+    self.read(buffer);
 
     return unsafe { mem::transmute::<[u8, ..4], [u32, ..1]>(buffer) }[0];
   }
@@ -120,7 +120,7 @@ pub trait Stream {
   fn read_ne_u64(&mut self) -> u64 {
     let mut buffer = [0, ..8];
 
-    self.read_exact(buffer);
+    self.read(buffer);
 
     return unsafe { mem::transmute::<[u8, ..8], [u64, ..1]>(buffer) }[0];
   }

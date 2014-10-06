@@ -13,7 +13,7 @@ impl MemoryStream {
 }
 
 impl Stream for MemoryStream {
-  fn read(&mut self, buffer: &mut [u8]) -> Option<uint> {
+  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.position >= self.buffer.len() { return None }
 
     let write_len = std::cmp::min(buffer.len(), self.buffer.len() - self.position);
