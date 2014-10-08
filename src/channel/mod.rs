@@ -1,12 +1,11 @@
 extern crate alloc;
 
 use std::mem;
-use std::cell::UnsafeCell;
 use std::ptr::{RawPtr,RawMutPtr};
 
 use std::sync;
 use std::sync::{Arc,Semaphore};
-use std::sync::atomic::{AtomicBool,AtomicInt};
+use std::sync::atomic::AtomicInt;
 
 struct Channel<T> {
   rc_read: AtomicInt, rc_write: AtomicInt,
@@ -153,7 +152,7 @@ mod tests {
   #[test]
   #[should_fail]
   fn test_source_gone() {
-    let (mut sink, mut source) = super::create::<Test>(1);
+    let (mut sink, source) = super::create::<Test>(1);
 
     drop(source);
 
