@@ -34,7 +34,7 @@ pub struct Stream {
 /// with a None signalling end of file.
 
 impl Stream {
-  fn new(source: channel::Source<Binary>) -> Stream {
+  pub fn new(source: channel::Source<Binary>) -> Stream {
     return Stream { end_of_file: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
   }
 
@@ -56,7 +56,7 @@ impl Stream {
       }
 
       let input = binary.data.slice(0, len);
-      let output = b.mut_slice(0, len);
+      let output = b.slice_mut(0, len);
 
       std::slice::bytes::copy_memory(output, input);
     });
@@ -74,7 +74,7 @@ impl Stream {
   ///
   /// If an error occurs during this I/O operation, then it should fail! the
   /// task. Note that reading 0 bytes is not considered an error.
-  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
+  pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.position == self.length {
       if self.end_of_file {
         return None;
@@ -87,7 +87,7 @@ impl Stream {
 
     {
         let input = self.buffer.slice(self.position, self.position + write_len);
-        let output = buffer.mut_slice(0, write_len);
+        let output = buffer.slice_mut(0, write_len);
 
         assert_eq!(input.len(), output.len());
 
@@ -110,7 +110,7 @@ impl Stream {
   ///
   /// If an error occurs during this I/O operation, then it should fail! the
   /// task. Note that skipping 0 bytes is not considered an error.
-  fn try_skip(&mut self, amount: uint) -> Option<uint> {
+  pub fn try_skip(&mut self, amount: uint) -> Option<uint> {
     if self.position == self.length {
       if self.end_of_file {
         return None;
@@ -129,7 +129,7 @@ impl Stream {
   }
 
   /// Reads exactly the length of `buffer` and places them in `buffer`.
-  fn read(&mut self, buffer: &mut [u8]) {
+  pub fn read(&mut self, buffer: &mut [u8]) {
     let length = buffer.len();
 
     if self.read_at_least(length, buffer) != length {
@@ -138,7 +138,7 @@ impl Stream {
   }
 
   /// Skips exactly `amount` bytes.
-  fn skip(&mut self, amount: uint) {
+  pub fn skip(&mut self, amount: uint) {
     let mut skipped = 0;
 
     while skipped < amount {
@@ -155,13 +155,13 @@ impl Stream {
   ///
   /// This will continue to call `try_read` until at least `min` bytes have been
   /// read.
-  fn read_at_least(&mut self, min: uint, buffer: &mut [u8]) -> uint {
+  pub fn read_at_least(&mut self, min: uint, buffer: &mut [u8]) -> uint {
     if min > buffer.len() { fail!("Stream: The buffer is too short (ARGUMENT)") }
 
     let mut read = 0;
 
     while read < min {
-      match self.try_read(buffer.mut_slice_from(read)) {
+      match self.try_read(buffer.slice_from_mut(read)) {
         Some(0) => fail!("Stream: Not progressing (TODO)"),
         Some(n) => read += n,
         None => fail!("Stream: Unexpected EOF (INPUT)")
@@ -172,7 +172,7 @@ impl Stream {
   }
 
   /// Reads a u8.
-  fn read_u8(&mut self) -> u8 {
+  pub fn read_u8(&mut self) -> u8 {
     let mut buffer = [0];
 
     self.read(buffer);
@@ -181,7 +181,7 @@ impl Stream {
   }
 
   /// Reads a native endian u16
-  fn read_ne_u16(&mut self) -> u16 {
+  pub fn read_ne_u16(&mut self) -> u16 {
     let mut buffer = [0, ..2];
 
     self.read(buffer);
@@ -190,17 +190,17 @@ impl Stream {
   }
 
   /// Reads a big endian u16.
-  fn read_be_u16(&mut self) -> u16 {
+  pub fn read_be_u16(&mut self) -> u16 {
     return Int::from_be(self.read_ne_u16());
   }
 
   /// Reads a little endian u16.
-  fn read_le_u16(&mut self) -> u16 {
+  pub fn read_le_u16(&mut self) -> u16 {
     return Int::from_le(self.read_ne_u16());
   }
 
   /// Reads a native endian u32
-  fn read_ne_u32(&mut self) -> u32 {
+  pub fn read_ne_u32(&mut self) -> u32 {
     let mut buffer = [0, ..4];
 
     self.read(buffer);
@@ -209,17 +209,17 @@ impl Stream {
   }
 
   /// Reads a big endian u32.
-  fn read_be_u32(&mut self) -> u32 {
+  pub fn read_be_u32(&mut self) -> u32 {
     return Int::from_be(self.read_ne_u32());
   }
 
   /// Reads a little endian u32.
-  fn read_le_u32(&mut self) -> u32 {
+  pub fn read_le_u32(&mut self) -> u32 {
     return Int::from_le(self.read_ne_u32());
   }
 
   /// Reads a native endian u64
-  fn read_ne_u64(&mut self) -> u64 {
+  pub fn read_ne_u64(&mut self) -> u64 {
     let mut buffer = [0, ..8];
 
     self.read(buffer);
@@ -228,69 +228,69 @@ impl Stream {
   }
 
   /// Reads a big endian u64.
-  fn read_be_u64(&mut self) -> u64 {
+  pub fn read_be_u64(&mut self) -> u64 {
     return Int::from_be(self.read_ne_u64());
   }
 
   /// Reads a little endian u64.
-  fn read_le_u64(&mut self) -> u64 {
+  pub fn read_le_u64(&mut self) -> u64 {
     return Int::from_le(self.read_ne_u64());
   }
 
   /// Reads a i8
-  fn read_i8(&mut self) -> i8 {
+  pub fn read_i8(&mut self) -> i8 {
     return self.read_u8() as i8;
   }
 
   /// Reads a native endian u16
-  fn read_ne_i16(&mut self) -> i16 {
+  pub fn read_ne_i16(&mut self) -> i16 {
     return self.read_ne_u16() as i16;
   }
 
   /// Reads a big endian u16.
-  fn read_be_i16(&mut self) -> i16 {
+  pub fn read_be_i16(&mut self) -> i16 {
     return self.read_be_u16() as i16;
   }
 
   /// Reads a little endian u16.
-  fn read_le_i16(&mut self) -> i16 {
+  pub fn read_le_i16(&mut self) -> i16 {
     return self.read_le_u16() as i16;
   }
 
   /// Reads a native endian u32
-  fn read_ne_i32(&mut self) -> i32 {
+  pub fn read_ne_i32(&mut self) -> i32 {
     return self.read_ne_u32() as i32;
   }
 
   /// Reads a big endian u32.
-  fn read_be_i32(&mut self) -> i32 {
+  pub fn read_be_i32(&mut self) -> i32 {
     return self.read_be_u32() as i32;
   }
 
   /// Reads a little endian u32.
-  fn read_le_i32(&mut self) -> i32 {
+  pub fn read_le_i32(&mut self) -> i32 {
     return self.read_le_u32() as i32;
   }
 
   /// Reads a native endian u64
-  fn read_ne_i64(&mut self) -> i64 {
+  pub fn read_ne_i64(&mut self) -> i64 {
     return self.read_ne_u64() as i64;
   }
 
   /// Reads a big endian u64.
-  fn read_be_i64(&mut self) -> i64 {
+  pub fn read_be_i64(&mut self) -> i64 {
     return self.read_be_u64() as i64;
   }
 
   /// Reads a little endian u64.
-  fn read_le_i64(&mut self) -> i64 {
+  pub fn read_le_i64(&mut self) -> i64 {
     return self.read_le_u64() as i64;
   }
 
   /// Reads `n` little-endian unsigned integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  fn read_le_uint_n(&mut self, n: uint) -> u64 {
+  pub fn read_le_uint_n(&mut self, n: uint) -> u64 {
       assert!(n > 0 && n <= 8);
 
       let mut result = 0u64;
@@ -305,14 +305,14 @@ impl Stream {
   /// Reads `n` little-endian signed integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  fn read_le_int_n(&mut self, n: uint) -> i64 {
+  pub fn read_le_int_n(&mut self, n: uint) -> i64 {
     return extend_sign(self.read_le_uint_n(n), n);
   }
 
   /// Reads `n` big-endian unsigned integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  fn read_be_uint_n(&mut self, n: uint) -> u64 {
+  pub fn read_be_uint_n(&mut self, n: uint) -> u64 {
     assert!(n > 0 && n <= 8);
 
     let mut result = 0u64;
@@ -327,7 +327,7 @@ impl Stream {
   /// Reads `n` big-endian signed integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  fn read_be_int_n(&mut self, n: uint) -> i64 {
+  pub fn read_be_int_n(&mut self, n: uint) -> i64 {
     return extend_sign(self.read_be_uint_n(n), n);
   }
 }

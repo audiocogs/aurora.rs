@@ -1,5 +1,4 @@
 use std;
-
 use stream;
 use channel;
 
@@ -29,7 +28,7 @@ impl Buffer {
 
         {
           let input = b.slice(start, end);
-          let output = binary.data.mut_slice(0, write_len);
+          let output = binary.data.slice_mut(0, write_len);
 
           std::slice::bytes::copy_memory(output, input);
         }
@@ -45,7 +44,6 @@ impl Buffer {
 
 #[cfg(test)]
 mod tests {
-  use std;
   use channel;
   use stream;
 
