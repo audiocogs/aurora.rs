@@ -1,67 +1,77 @@
 use std;
 
-use stream::Stream;
+use stream;
+use channel;
 
-pub struct FileStream {
-  file: std::io::File
+pub struct File {
+  file: std::io::File, chunk: uint, sink: channel::Sink<stream::Binary>
 }
 
-impl FileStream {
-  pub fn new(file: std::io::File) -> FileStream {
-    return FileStream { file: file };
+impl File {
+  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<stream::Binary>) -> File {
+    return File { file: file, chunk: chunk, sink: sink };
   }
-}
+  
+  pub fn run(&mut self) {
+    let f = &mut self.file;
+    let c = self.chunk;
 
-impl Stream for FileStream {
-  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
-    if self.file.eof() {
-      return None;
-    }
-
-    match self.file.read(buffer) {
-      Ok(n) => return Some(n),
-      Err(_) => fail!("File: Error when reading (ARGUMENT)")
-    }
-  }
-
-  fn try_skip(&mut self, amount: uint) -> Option<uint> {
-    if self.file.eof() {
-      return None;
-    }
-
-    let mut buffer = Vec::from_elem(amount, 0x00u8);
-
-    match self.file.read(buffer.as_mut_slice()) {
-      Ok(n) => return Some(n),
-      Err(_) => fail!("File: Error when reading (ARGUMENT)")
+    loop {
+      self.sink.write(|binary| {
+        match f.push(c, &mut binary.data) {
+          Ok(_) => {
+            binary.end_of_file = f.eof();
+          }
+          Err(_) => {
+            binary.end_of_file = true;
+          }
+        };
+      })
     }
   }
-
 }
 
 #[cfg(test)]
 mod tests {
   use std;
-  use stream::Stream;
+  use channel;
+  use stream;
 
   #[test]
   fn test_read_zero() {
-    let path = std::path::Path::new("/dev/zero");
-    let mut s = super::FileStream::new(std::io::File::open(&path).unwrap());
+    let (sink, mut source) = channel::create::<stream::Binary>(1);
 
-    assert_eq!(s.read_u8(), 0);
-    assert_eq!(s.read_be_u16(), 0);
-    assert_eq!(s.read_be_u32(), 0);
-    assert_eq!(s.read_be_u64(), 0);
+    spawn(proc() {
+      let path = std::path::Path::new("/dev/zero");
+      let file = std::io::File::open(&path).unwrap();
+      
+      super::File::new(file, 4096, sink).run();
+    });
+
+    source.read(|binary| {
+      assert_eq!(binary.end_of_file, false);
+      assert_eq!(binary.data.len(), 4096);
+
+      for i in range(0u, 4096) {
+        assert_eq!(binary.data[i], 0);
+      }
+    });
   }
-  
+
   #[test]
-  fn test_skip_zero() {
-    let path = std::path::Path::new("/dev/zero");
-    let mut s = super::FileStream::new(std::io::File::open(&path).unwrap());
+  fn test_read_null() {
+    let (sink, mut source) = channel::create::<stream::Binary>(1);
 
-    s.skip(10);
+    spawn(proc() {
+      let path = std::path::Path::new("/dev/null");
+      let file = std::io::File::open(&path).unwrap();
+      
+      super::File::new(file, 4096, sink).run();
+    });
 
-    assert_eq!(s.read_u8(), 0);
+    source.read(|binary| {
+      assert_eq!(binary.end_of_file, true);
+      assert_eq!(binary.data.len(), 0);
+    });
   }
 }

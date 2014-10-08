@@ -2,6 +2,18 @@ use std::mem;
 
 pub mod buffer;
 
+pub struct Binary {
+  pub end_of_file: bool,
+  pub data: Vec<u8>
+}
+
+impl ::Initialize for Binary {
+  fn initialize(&mut self) {
+    self.end_of_file = false;
+    self.data.truncate(0);
+  }
+}
+
 /// A trait for objects which are byte-oriented readable streams. Streams are
 /// defined by two methods, `read`, and `bus`. This function will block until
 /// data is available, filling in the provided buffer with any data read.
