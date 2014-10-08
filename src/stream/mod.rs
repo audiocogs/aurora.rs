@@ -1,6 +1,6 @@
 use std::mem;
 
-pub mod buffer;
+use channel;
 
 pub struct Binary {
   pub end_of_file: bool,
@@ -18,23 +18,43 @@ impl ::Initialize for Binary {
   }
 }
 
-/// A trait for objects which are byte-oriented readable streams. Streams are
-/// defined by two methods, `read`, and `bus`. This function will block until
-/// data is available, filling in the provided buffer with any data read.
-///
-/// If it does block for a significant time (more than ~100ms) then it will
-/// notify the Aurora bus that the stream is starved, this prepares the
-/// framework that there might be interruptions soon.
+/*
+pub struct Stream {
+  end_of_file: bool, position: uint, buffer: Vec<u8>, source: channel::Source<Binary>
+}
+
+/// Streams are byte-oriented, and readable.
 ///
 /// Unlike regular Readers, the Stream is much more likely to fail! instead of
 /// returning an IoError. There's not much point for a codec to continue after
-/// an IoError, the idea is that the I/O layer instead handles reconnections
+/// an IoError, so the idea is that the I/O layer instead handles reconnections
 /// and so on automatically.
 ///
 /// Instead of returning a specific error, the results are instead Options,
 /// with a None signalling end of file.
 
-pub trait Stream {
+impl Stream {
+  fn new(source: channel::Source<Binary>) -> Stream {
+    return Stream { end_of_file: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
+  }
+
+  fn update_buffer(&mut self) {
+    self.source.read(|binary| {
+      self.end_of_file = binary.end_of_file;
+      self.position = 0;
+      self.length = binary.data.len();
+
+      if self.buffer.capacity() < self.length {
+        self.buffer.grow(self.length - self.buffer.capacity(), 0);
+      }
+
+      let input = binary.data.slice(0, self.length);
+      let output = self.buffer.mut_slice(0, self.length);
+
+      std::slice::bytes::copy_memory(output, input);
+    });
+  }
+
   /// Read bytes, up to the length of `buffer` and place them in `buffer`.
   /// Returns the number of bytes read. The number of bytes read may be less
   /// than the number requested, even 0. Returns `None` on end of file.
@@ -43,15 +63,59 @@ pub trait Stream {
   ///
   /// If an error occurs during this I/O operation, then it should fail! the
   /// task. Note that reading 0 bytes is not considered an error.
-  ///
-  /// # Implementation Note
-  ///
-  /// When implementing this method on a new Stream, you are strongly
-  /// encouraged not to return 0 if you can avoid it.
-  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint>;
-  fn try_skip(&mut self, amount: uint) -> Option<uint>;
+  fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
+    if self.position == self.length {
+      if self.end_of_file {
+        return None;
+      } else {
+        self.update_buffer();
+      }
+    }
 
-  // Convenient helper methods based on the above methods
+    let write_len = std::cmp::min(buffer.len(), self.buffer.len() - self.position);
+
+    {
+        let input = self.buffer.slice(self.position, self.position + write_len);
+        let output = buffer.mut_slice(0, write_len);
+
+        assert_eq!(input.len(), output.len());
+
+        std::slice::bytes::copy_memory(output, input);
+    }
+
+    self.position += write_len;
+
+    assert!(self.position <= self.buffer.len());
+
+    return Some(write_len);
+
+  }
+
+  /// Skips bytes, up to `amount`.
+  /// Returns the number of bytes skipped. The number of bytes skipped may be
+  /// less than the number requested, even 0. Returns `None` on end of file.
+  ///
+  /// # Error
+  ///
+  /// If an error occurs during this I/O operation, then it should fail! the
+  /// task. Note that skipping 0 bytes is not considered an error.
+  fn try_skip(&mut self, amount: uint) -> Option<uint> {
+    if self.position == self.length {
+      if self.end_of_file {
+        return None;
+      } else {
+        self.update_buffer();
+      }
+    }
+
+    let skip_len = std::cmp::min(amount, self.buffer.len() - self.position);
+
+    self.position += skip_len;
+
+    assert!(self.position <= self.buffer.len());
+
+    return Some(skip_len);
+  }
 
   /// Reads exactly the length of `buffer` and places them in `buffer`.
   fn read(&mut self, buffer: &mut [u8]) {
@@ -309,3 +373,4 @@ fn extend_sign_bits(value: u64, n: uint) -> i64 {
 
   return (value << shift) as i64 >> shift;
 }
+*/
