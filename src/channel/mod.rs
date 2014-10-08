@@ -1,6 +1,10 @@
 extern crate alloc;
 
+use super::Initialize;
+
 use std::mem;
+
+use std::ptr;
 use std::ptr::{RawPtr,RawMutPtr};
 
 use std::sync;
@@ -66,7 +70,7 @@ pub struct Sink<T> {
   channel: Arc<Channel<T>>
 }
 
-impl<T: super::Initialize> Sink<T> {
+impl<T: Initialize> Sink<T> {
   fn new(channel: Arc<Channel<T>>) -> Sink<T> {
     return Sink { channel: channel };
   }
@@ -86,7 +90,7 @@ impl<T: super::Initialize> Sink<T> {
       let ptr = mem::transmute::<int, *mut T>(self.channel.data).offset(offset);
       let data = ptr.as_mut().unwrap();
 
-      data.initialize();
+      data.reinitialize();
 
       f(data);
     }
@@ -106,6 +110,16 @@ pub fn create<T: super::Initialize>(capacity: uint) -> (Sink<T>, Source<T>) {
   let data = unsafe {
     alloc::heap::allocate(capacity * mem::size_of::<T>(), mem::align_of::<T>())
   };
+  
+  for offset in range(0, capacity as int) {
+    unsafe {
+      let ptr = mem::transmute::<*mut u8, *mut T>(data).offset(offset);
+
+      let n: T = Initialize::initialize();
+
+      ptr::write(ptr, n);
+    }
+  }
 
   let channel = Arc::new(Channel {
     rc_read: AtomicInt::new(1), rc_write: AtomicInt::new(1),
@@ -125,7 +139,11 @@ mod tests {
   struct Test { value: uint }
 
   impl ::Initialize for Test {
-    fn initialize(&mut self) {
+    fn initialize() -> Test {
+      return Test { value: 0 };
+    }
+
+    fn reinitialize(&mut self) {
       self.value = 0;
     }
   }

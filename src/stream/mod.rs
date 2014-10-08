@@ -8,7 +8,11 @@ pub struct Binary {
 }
 
 impl ::Initialize for Binary {
-  fn initialize(&mut self) {
+  fn initialize() -> Binary {
+    return Binary { end_of_file: false, data: Vec::with_capacity(4096) };
+  }
+
+  fn reinitialize(&mut self) {
     self.end_of_file = false;
     self.data.truncate(0);
   }

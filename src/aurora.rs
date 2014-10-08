@@ -6,5 +6,6 @@ pub mod stream;
 pub mod file;
 
 pub trait Initialize {
-  fn initialize(&mut self);
+  fn initialize() -> Self;
+  fn reinitialize(&mut self);
 }
