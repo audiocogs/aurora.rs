@@ -4,23 +4,23 @@ use std::mem;
 use channel;
 
 pub struct Binary {
-  pub end_of_file: bool,
+  pub final: bool,
   pub data: Vec<u8>
 }
 
 impl ::Initialize for Binary {
   fn initialize() -> Binary {
-    return Binary { end_of_file: false, data: Vec::with_capacity(4096) };
+    return Binary { final: false, data: Vec::with_capacity(4096) };
   }
 
   fn reinitialize(&mut self) {
-    self.end_of_file = false;
+    self.final = false;
     self.data.truncate(0);
   }
 }
 
 pub struct Stream {
-  end_of_file: bool, position: uint, length: uint, buffer: Vec<u8>, source: channel::Source<Binary>
+  final: bool, position: uint, length: uint, buffer: Vec<u8>, source: channel::Source<Binary>
 }
 
 /// Streams are byte-oriented, and readable.
@@ -35,7 +35,7 @@ pub struct Stream {
 
 impl Stream {
   pub fn new(source: channel::Source<Binary>) -> Stream {
-    return Stream { end_of_file: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
+    return Stream { final: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
   }
 
   fn update_buffer(&mut self) {
@@ -46,7 +46,7 @@ impl Stream {
     let mut len = 0;
 
     s.read(|binary| {
-      eof = binary.end_of_file;
+      eof = binary.final;
       len = binary.data.len();
 
       let l = b.len();
@@ -63,7 +63,7 @@ impl Stream {
 
     self.position = 0;
     self.length = len;
-    self.end_of_file = eof;
+    self.final = eof;
   }
 
   /// Read bytes, up to the length of `buffer` and place them in `buffer`.
@@ -76,7 +76,7 @@ impl Stream {
   /// task. Note that reading 0 bytes is not considered an error.
   pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.position == self.length {
-      if self.end_of_file {
+      if self.final {
         return None;
       } else {
         self.update_buffer();
@@ -112,7 +112,7 @@ impl Stream {
   /// task. Note that skipping 0 bytes is not considered an error.
   pub fn try_skip(&mut self, amount: uint) -> Option<uint> {
     if self.position == self.length {
-      if self.end_of_file {
+      if self.final {
         return None;
       } else {
         self.update_buffer();

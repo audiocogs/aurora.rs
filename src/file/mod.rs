@@ -16,16 +16,20 @@ impl File {
     let f = &mut self.file;
     let c = self.chunk;
 
-    loop {
+    let mut final = false;
+
+    while !final {
       self.sink.write(|binary| {
         match f.push(c, &mut binary.data) {
           Ok(_) => {
-            binary.end_of_file = f.eof();
+            final = f.eof();
           }
           Err(_) => {
-            binary.end_of_file = true;
+            final = true;
           }
         };
+
+        binary.final = final;
       })
     }
   }
@@ -49,7 +53,7 @@ mod tests {
     });
 
     source.read(|binary| {
-      assert_eq!(binary.end_of_file, false);
+      assert_eq!(binary.final, false);
       assert_eq!(binary.data.len(), 4096);
 
       for i in range(0u, 4096) {
@@ -70,7 +74,7 @@ mod tests {
     });
 
     source.read(|binary| {
-      assert_eq!(binary.end_of_file, true);
+      assert_eq!(binary.final, true);
       assert_eq!(binary.data.len(), 0);
     });
   }
