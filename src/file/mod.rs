@@ -1,14 +1,13 @@
 use std;
 
-use stream;
 use channel;
 
 pub struct File {
-  file: std::io::File, chunk: uint, sink: channel::Sink<stream::Binary>
+  file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>
 }
 
 impl File {
-  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<stream::Binary>) -> File {
+  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>) -> File {
     return File { file: file, chunk: chunk, sink: sink };
   }
   
@@ -39,11 +38,10 @@ impl File {
 mod tests {
   use std;
   use channel;
-  use stream;
 
   #[test]
   fn test_read_zero() {
-    let (sink, mut source) = channel::create::<stream::Binary>(1);
+    let (sink, mut source) = channel::create::<::Binary>(1);
 
     spawn(proc() {
       let path = std::path::Path::new("/dev/zero");
@@ -64,7 +62,7 @@ mod tests {
 
   #[test]
   fn test_read_null() {
-    let (sink, mut source) = channel::create::<stream::Binary>(1);
+    let (sink, mut source) = channel::create::<::Binary>(1);
 
     spawn(proc() {
       let path = std::path::Path::new("/dev/null");

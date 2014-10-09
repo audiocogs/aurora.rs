@@ -3,24 +3,8 @@ use std::mem;
 
 use channel;
 
-pub struct Binary {
-  pub final: bool,
-  pub data: Vec<u8>
-}
-
-impl ::Initialize for Binary {
-  fn initialize() -> Binary {
-    return Binary { final: false, data: Vec::with_capacity(4096) };
-  }
-
-  fn reinitialize(&mut self) {
-    self.final = false;
-    self.data.truncate(0);
-  }
-}
-
 pub struct Stream {
-  final: bool, position: uint, length: uint, buffer: Vec<u8>, source: channel::Source<Binary>
+  final: bool, position: uint, length: uint, buffer: Vec<u8>, source: channel::Source<super::Binary>
 }
 
 /// Streams are byte-oriented, and readable.
@@ -34,7 +18,7 @@ pub struct Stream {
 /// with a None signalling end of file.
 
 impl Stream {
-  pub fn new(source: channel::Source<Binary>) -> Stream {
+  pub fn new(source: channel::Source<super::Binary>) -> Stream {
     return Stream { final: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
   }
 
@@ -393,7 +377,7 @@ mod tests {
   use buffer;
 
   fn prepare(buffer: Vec<u8>) -> Stream {
-    let (sink, source) = channel::create::<super::Binary>(1);
+    let (sink, source) = channel::create::<::Binary>(1);
 
     spawn(proc() {
       buffer::Buffer::new(buffer, 4096, sink).run();

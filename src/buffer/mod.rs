@@ -1,13 +1,13 @@
 use std;
-use stream;
+
 use channel;
 
 pub struct Buffer {
-  buffer: Vec<u8>, position: uint, chunk: uint, sink: channel::Sink<stream::Binary>
+  buffer: Vec<u8>, position: uint, chunk: uint, sink: channel::Sink<super::Binary>
 }
 
 impl Buffer {
-  pub fn new(buffer: Vec<u8>, chunk: uint, sink: channel::Sink<stream::Binary>) -> Buffer {
+  pub fn new(buffer: Vec<u8>, chunk: uint, sink: channel::Sink<super::Binary>) -> Buffer {
     return Buffer { buffer: buffer, position: 0, chunk: chunk, sink: sink };
   }
 
@@ -50,11 +50,10 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
   use channel;
-  use stream;
 
   #[test]
   fn test_read_zero() {
-    let (sink, mut source) = channel::create::<stream::Binary>(1);
+    let (sink, mut source) = channel::create::<::Binary>(1);
 
     spawn(proc() {
       super::Buffer::new(vec![0u8], 4096, sink).run();
@@ -69,7 +68,7 @@ mod tests {
 
   #[test]
   fn test_read_null() {
-    let (sink, mut source) = channel::create::<stream::Binary>(1);
+    let (sink, mut source) = channel::create::<::Binary>(1);
 
     spawn(proc() {
       super::Buffer::new(vec![], 4096, sink).run();
