@@ -2,13 +2,13 @@ use std;
 
 use channel;
 
-pub struct File {
+pub struct Input {
   file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>
 }
 
-impl File {
-  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>) -> File {
-    return File { file: file, chunk: chunk, sink: sink };
+impl Input {
+  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>) -> Input {
+    return Input { file: file, chunk: chunk, sink: sink };
   }
   
   pub fn run(&mut self) {
@@ -29,7 +29,31 @@ impl File {
         };
 
         binary.final = final;
-      })
+      });
+    }
+  }
+}
+
+pub struct Output {
+  file: std::io::File, source: channel::Source<super::Binary>
+}
+
+impl Output {
+  pub fn new(file: std::io::File, source: channel::Source<super::Binary>) -> Output {
+    return Output { file: file, source: source };
+  }
+
+  pub fn run(&mut self) {
+    let f = &mut self.file;
+
+    let mut final = false;
+
+    while !final {
+      self.source.read(|binary| {
+        f.write(binary.data.as_slice()).unwrap();
+
+        final = binary.final;
+      });
     }
   }
 }
@@ -47,7 +71,7 @@ mod tests {
       let path = std::path::Path::new("/dev/zero");
       let file = std::io::File::open(&path).unwrap();
       
-      super::File::new(file, 4096, sink).run();
+      super::Input::new(file, 4096, sink).run();
     });
 
     source.read(|binary| {
@@ -68,7 +92,7 @@ mod tests {
       let path = std::path::Path::new("/dev/null");
       let file = std::io::File::open(&path).unwrap();
       
-      super::File::new(file, 4096, sink).run();
+      super::Input::new(file, 4096, sink).run();
     });
 
     source.read(|binary| {

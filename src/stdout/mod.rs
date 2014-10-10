@@ -3,11 +3,11 @@ use std::io;
 use channel;
 
 pub struct Output {
-  source: channel::Source<::Audio>
+  source: channel::Source<::Binary>
 }
 
 impl Output {
-  pub fn new(source: channel::Source<::Audio>) -> Output {
+  pub fn new(source: channel::Source<::Binary>) -> Output {
     return Output { source: source };
   }
 
@@ -16,10 +16,10 @@ impl Output {
     let mut stdout = io::stdio::stdout();
 
     while !final {
-      self.source.read(|audio| {
-        stdout.write(audio.data.as_slice()).unwrap();
+      self.source.read(|binary| {
+        stdout.write(binary.data.as_slice()).unwrap();
 
-        final = audio.final;
+        final = binary.final;
       });
     }
   }
