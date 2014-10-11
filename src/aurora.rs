@@ -16,17 +16,17 @@ pub trait Initialize {
 }
 
 pub struct Binary {
-  pub final: bool,
+  pub last: bool,
   pub data: Vec<u8>
 }
 
 impl Initialize for Binary {
   fn initialize() -> Binary {
-    return Binary { final: false, data: Vec::with_capacity(4096) };
+    return Binary { last: false, data: Vec::with_capacity(4096) };
   }
 
   fn reinitialize(&mut self) {
-    self.final = false;
+    self.last = false;
     self.data.truncate(0);
   }
 }
@@ -55,7 +55,7 @@ pub mod sample_type {
 }
 
 pub struct Audio {
-  pub final: bool,
+  pub last: bool,
   pub channels: uint,
   pub sample_rate: f64,
   pub endian: endian::Endian,
@@ -66,7 +66,7 @@ pub struct Audio {
 impl Initialize for Audio {
   fn initialize() -> Audio {
     return Audio {
-      final: false,
+      last: false,
       channels: 0,
       sample_rate: 0.0,
       endian: endian::Big,
@@ -76,7 +76,7 @@ impl Initialize for Audio {
   }
 
   fn reinitialize(&mut self) {
-    self.final = false;
+    self.last = false;
     self.channels = 0;
     self.sample_rate = 0.0;
     self.endian = endian::Big;

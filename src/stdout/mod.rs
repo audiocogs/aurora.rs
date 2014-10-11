@@ -12,14 +12,14 @@ impl Output {
   }
 
   pub fn run(&mut self) {
-    let mut final = false;
+    let mut last = false;
     let mut stdout = io::stdio::stdout();
 
-    while !final {
+    while !last {
       self.source.read(|binary| {
         stdout.write(binary.data.as_slice()).unwrap();
 
-        final = binary.final;
+        last = binary.last;
       });
     }
   }

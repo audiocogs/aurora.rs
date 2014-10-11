@@ -12,15 +12,15 @@ impl Buffer {
   }
 
   pub fn run(&mut self) {
-    let mut final = false;
+    let mut last = false;
 
-    while !final {
+    while !last {
       let write_len = std::cmp::min(self.chunk, self.buffer.len() - self.position);
 
       let start = self.position;
       let end = self.position + write_len;
 
-      final = end >= self.buffer.len();
+      last = end >= self.buffer.len();
 
       let b = &self.buffer;
 
@@ -39,7 +39,7 @@ impl Buffer {
         }
 
         binary.data.truncate(write_len);
-        binary.final = final;
+        binary.last = last;
       });
 
       self.position += write_len;
@@ -60,7 +60,7 @@ mod tests {
     });
 
     source.read(|binary| {
-      assert_eq!(binary.final, true);
+      assert_eq!(binary.last, true);
       assert_eq!(binary.data.len(), 1);
       assert_eq!(binary.data[0], 0);
     });
@@ -75,7 +75,7 @@ mod tests {
     });
 
     source.read(|binary| {
-      assert_eq!(binary.final, true);
+      assert_eq!(binary.last, true);
       assert_eq!(binary.data.len(), 0);
     });
   }

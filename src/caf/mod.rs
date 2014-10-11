@@ -17,12 +17,12 @@ impl Muxer {
 
   pub fn run(&mut self) {
     let mut first = true;
-    let mut final = false;
+    let mut last = false;
 
     let source = &mut self.source;
     let sink = &mut self.sink;
 
-    while !final {
+    while !last {
       source.read(|audio| {
         if first {
           if let ::sample_type::Unknown = audio.sample_type {
@@ -86,14 +86,14 @@ impl Muxer {
           first = false;
         }
 
-        final = audio.final;
+        last = audio.last;
 
         sink.write(|binary| {
           binary.data.grow(audio.data.len(), 0);
 
           std::slice::bytes::copy_memory(binary.data.as_mut_slice(), audio.data.as_slice());
 
-          binary.final = final;
+          binary.last = last;
         });
       });
     }

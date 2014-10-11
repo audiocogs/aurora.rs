@@ -4,7 +4,7 @@ use std::mem;
 use channel;
 
 pub struct Stream<'a> {
-  final: bool,
+  last: bool,
   position: uint,
   length: uint,
   buffer: Vec<u8>,
@@ -23,7 +23,7 @@ pub struct Stream<'a> {
 
 impl<'a> Stream<'a> {
   pub fn new(source: &'a mut channel::Source<super::Binary>) -> Stream<'a> {
-    return Stream { final: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
+    return Stream { last: false, position: 0, length: 0, buffer: Vec::with_capacity(4096), source: source };
   }
 
   fn update_buffer(&mut self) {
@@ -34,7 +34,7 @@ impl<'a> Stream<'a> {
     let mut len = 0;
 
     s.read(|binary| {
-      eof = binary.final;
+      eof = binary.last;
       len = binary.data.len();
 
       let l = b.len();
@@ -51,7 +51,7 @@ impl<'a> Stream<'a> {
 
     self.position = 0;
     self.length = len;
-    self.final = eof;
+    self.last = eof;
   }
 
   /// Read bytes, up to the length of `buffer` and place them in `buffer`.
@@ -64,7 +64,7 @@ impl<'a> Stream<'a> {
   /// task. Note that reading 0 bytes is not considered an error.
   pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.position == self.length {
-      if self.final {
+      if self.last {
         return None;
       } else {
         self.update_buffer();
@@ -100,7 +100,7 @@ impl<'a> Stream<'a> {
   /// task. Note that skipping 0 bytes is not considered an error.
   pub fn try_skip(&mut self, amount: uint) -> Option<uint> {
     if self.position == self.length {
-      if self.final {
+      if self.last {
         return None;
       } else {
         self.update_buffer();
