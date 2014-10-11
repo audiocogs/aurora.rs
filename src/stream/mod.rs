@@ -6,7 +6,7 @@ use channel;
 pub struct Stream<'a> {
   final: bool,
   position: uint,
-  length: uint, 
+  length: uint,
   buffer: Vec<u8>,
   source: &'a mut channel::Source<super::Binary>
 }
@@ -320,48 +320,48 @@ impl<'a> Stream<'a> {
   }
 }
 
-// pub struct Bitstream<'a> {
-//   pub cache: u8, pub cache_length: uint, stream: &'a mut Stream<'a>
-// }
-// 
-// impl<'a> Bitstream<'a> {
-//   pub fn new(stream: &'a mut Stream) -> Bitstream<'a> {
-//     return Bitstream { cache: 0, cache_length: 0, stream: stream };
-//   }
-// 
-//   pub fn read_n(&mut self, n: uint) -> u32 {
-//     if n > 32 {
-//       fail!("Bitstream: You cannot request more than 32 bits into a u32 (ARGUMENT)");
-//     }
-// 
-//     if n <= self.cache_length {
-//       let result = self.cache >> (self.cache_length - n);
-// 
-//       self.cache_length -= n;
-//       self.cache = self.cache & (0xFF >> (8 - self.cache_length));
-// 
-//       return result as u32;
-//     } else {
-//       let n_to_read = n - self.cache_length;
-//       let b_to_read = n_to_read / 8 + if n_to_read % 8 > 0 { 1 } else { 0 };
-// 
-//       let read = self.stream.read_be_uint_n(b_to_read);
-//       let sum = ((self.cache as u64) << (b_to_read * 8)) | (read as u64);
-// 
-//       self.cache_length = b_to_read * 8 - n_to_read;
-// 
-//       let result = sum >> self.cache_length;
-// 
-//       self.cache = (sum & (0xFF >> (8 - self.cache_length))) as u8;
-// 
-//       return result as u32;
-//     }
-//   }
-// 
-//   pub fn read_n_signed(&mut self, n: uint) -> i32 {
-//     return extend_sign_bits(self.read_n(n) as u64, n) as i32;
-//   }
-// }
+pub struct Bitstream<'a> {
+  pub cache: u8, pub cache_length: uint, stream: &'a mut Stream<'a>
+}
+
+impl<'a> Bitstream<'a> {
+  pub fn new(stream: &'a mut Stream<'a>) -> Bitstream<'a> {
+    return Bitstream { cache: 0, cache_length: 0, stream: stream };
+  }
+
+  pub fn read_n(&mut self, n: uint) -> u32 {
+    if n > 32 {
+      fail!("Bitstream: You cannot request more than 32 bits into a u32 (ARGUMENT)");
+    }
+
+    if n <= self.cache_length {
+      let result = self.cache >> (self.cache_length - n);
+
+      self.cache_length -= n;
+      self.cache = self.cache & (0xFF >> (8 - self.cache_length));
+
+      return result as u32;
+    } else {
+      let n_to_read = n - self.cache_length;
+      let b_to_read = n_to_read / 8 + if n_to_read % 8 > 0 { 1 } else { 0 };
+
+      let read = self.stream.read_be_uint_n(b_to_read);
+      let sum = ((self.cache as u64) << (b_to_read * 8)) | (read as u64);
+
+      self.cache_length = b_to_read * 8 - n_to_read;
+
+      let result = sum >> self.cache_length;
+
+      self.cache = (sum & (0xFF >> (8 - self.cache_length))) as u8;
+
+      return result as u32;
+    }
+  }
+
+  pub fn read_n_signed(&mut self, n: uint) -> i32 {
+    return extend_sign_bits(self.read_n(n) as u64, n) as i32;
+  }
+}
 
 fn extend_sign(value: u64, n: uint) -> i64 {
   return extend_sign_bits(value, n * 8);
@@ -507,75 +507,82 @@ mod tests {
     assert_eq!(s.read_be_uint_n(3), 0x030405);
   }
 
-  // #[test]
-  // fn test_short_reads() {
-  //   let mut s = prepare(vec![0xFFu8, 0xAA, 0x44]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n(8), 0xFF);
-  //   assert_eq!(r.read_n(4), 0x0A);
-  //   assert_eq!(r.read_n(2), 0x02);
-  //   assert_eq!(r.read_n(1), 0x01);
-  //   assert_eq!(r.read_n(1), 0x00);
-  //   assert_eq!(r.read_n(3), 0x02);
-  //   assert_eq!(r.read_n(3), 0x01);
-  //   assert_eq!(r.read_n(2), 0x00);
-  // }
-  // 
-  // #[test]
-  // fn test_medium_reads() {
-  //   let mut s = prepare(vec![0xFFu8, 0xAA, 0x44, 0xA3]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n(16), 0xFFAA);
-  //   assert_eq!(r.read_n(12), 0x44A);
-  //   assert_eq!(r.read_n(4), 0x3);
-  // }
-  // 
-  // #[test]
-  // fn test_large_reads() {
-  //   let mut s = prepare(vec![0xFFu8, 0xAA, 0x44, 0xA3, 0x34, 0x99, 0x44]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n(24), 0xFFAA44);
-  //   assert_eq!(r.read_n(32), 0xA3349944);
-  // }
-  // 
-  // #[test]
-  // fn test_signed() {
-  //   let mut s = prepare(vec![0xFFu8, 0xAA, 0x44, 0xA3, 0x34]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n_signed(1), -1);
-  //   assert_eq!(r.read_n_signed(2), -1);
-  //   assert_eq!(r.read_n_signed(3), -1);
-  //   assert_eq!(r.read_n_signed(4), -2);
-  //   assert_eq!(r.read_n_signed(6), -22);
-  //   assert_eq!(r.read_n_signed(8), 68);
-  //   assert_eq!(r.read_n_signed(16), -23756);
-  // }
-  // 
-  // #[test]
-  // fn test_stream() {
-  //   let mut s = prepare(vec![0xEAu8, 0xBD, 0x21]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n(4), 0xE);
-  //   assert_eq!(r.read_n(4), 0xA);
-  //   assert_eq!(r.read_n(4), 0xB);
-  //   assert_eq!(r.read_n(4), 0xD);
-  //   assert_eq!(r.read_n(4), 0x2);
-  //   assert_eq!(r.read_n(4), 0x1);
-  // }
-  // 
-  // #[test]
-  // fn test_stream2() {
-  //   let mut s = prepare(vec![0x30u8, 0xC8, 0x61]);
-  //   let mut r = super::Bitstream::new(&mut s);
-  // 
-  //   assert_eq!(r.read_n(6), 12);
-  //   assert_eq!(r.read_n(6), 12);
-  //   assert_eq!(r.read_n(6), 33);
-  //   assert_eq!(r.read_n(6), 33);
-  // }
+  #[test]
+  fn test_short_reads() {
+    let mut source = prepare!(vec![0xFFu8, 0xAA, 0x44]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+
+    assert_eq!(r.read_n(8), 0xFF);
+    assert_eq!(r.read_n(4), 0x0A);
+    assert_eq!(r.read_n(2), 0x02);
+    assert_eq!(r.read_n(1), 0x01);
+    assert_eq!(r.read_n(1), 0x00);
+    assert_eq!(r.read_n(3), 0x02);
+    assert_eq!(r.read_n(3), 0x01);
+    assert_eq!(r.read_n(2), 0x00);
+  }
+
+  #[test]
+  fn test_medium_reads() {
+    let mut source = prepare!(vec![0xFFu8, 0xAA, 0x44, 0xA3]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+    assert_eq!(r.read_n(16), 0xFFAA);
+    assert_eq!(r.read_n(12), 0x44A);
+    assert_eq!(r.read_n(4), 0x3);
+  }
+
+  #[test]
+  fn test_large_reads() {
+    let mut source = prepare!(vec![0xFFu8, 0xAA, 0x44, 0xA3, 0x34, 0x99, 0x44]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+    assert_eq!(r.read_n(24), 0xFFAA44);
+    assert_eq!(r.read_n(32), 0xA3349944);
+  }
+
+  #[test]
+  fn test_signed() {
+    let mut source = prepare!(vec![0xFFu8, 0xAA, 0x44, 0xA3, 0x34]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+    assert_eq!(r.read_n_signed(1), -1);
+    assert_eq!(r.read_n_signed(2), -1);
+    assert_eq!(r.read_n_signed(3), -1);
+    assert_eq!(r.read_n_signed(4), -2);
+    assert_eq!(r.read_n_signed(6), -22);
+    assert_eq!(r.read_n_signed(8), 68);
+    assert_eq!(r.read_n_signed(16), -23756);
+  }
+
+  #[test]
+  fn test_stream() {
+    let mut source = prepare!(vec![0xEAu8, 0xBD, 0x21]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+    assert_eq!(r.read_n(4), 0xE);
+    assert_eq!(r.read_n(4), 0xA);
+    assert_eq!(r.read_n(4), 0xB);
+    assert_eq!(r.read_n(4), 0xD);
+    assert_eq!(r.read_n(4), 0x2);
+    assert_eq!(r.read_n(4), 0x1);
+  }
+
+  #[test]
+  fn test_stream2() {
+    let mut source = prepare!(vec![0x30u8, 0xC8, 0x61]);
+    let mut s = Stream::new(&mut source);
+    let mut r = super::Bitstream::new(&mut s);
+
+    assert_eq!(r.read_n(6), 12);
+    assert_eq!(r.read_n(6), 12);
+    assert_eq!(r.read_n(6), 33);
+    assert_eq!(r.read_n(6), 33);
+  }
 }
