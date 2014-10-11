@@ -1,3 +1,4 @@
+#![feature(if_let)]
 #![feature(macro_rules)]
 #![feature(unsafe_destructor)]
 
@@ -7,6 +8,7 @@ pub mod stream;
 pub mod file;
 pub mod buffer;
 pub mod stdout;
+pub mod caf;
 
 pub trait Initialize {
   fn initialize() -> Self;
