@@ -26,7 +26,7 @@ impl Muxer {
       source.read(|audio| {
         if first {
           if let ::sample_type::Unknown = audio.sample_type {
-            fail!("caf::Muxer: Unknown sample type");
+            panic!("caf::Muxer: Unknown sample type");
           }
 
           sink.write(|binary| {

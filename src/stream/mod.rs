@@ -13,7 +13,7 @@ pub struct Stream<'a> {
 
 /// Streams are byte-oriented, and readable.
 ///
-/// Unlike regular Readers, the Stream is much more likely to fail! instead of
+/// Unlike regular Readers, the Stream is much more likely to panic! instead of
 /// returning an IoError. There's not much point for a codec to continue after
 /// an IoError, so the idea is that the I/O layer instead handles reconnections
 /// and so on automatically.
@@ -60,7 +60,7 @@ impl<'a> Stream<'a> {
   ///
   /// # Error
   ///
-  /// If an error occurs during this I/O operation, then it should fail! the
+  /// If an error occurs during this I/O operation, then it should panic! the
   /// task. Note that reading 0 bytes is not considered an error.
   pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
     if self.position == self.length {
@@ -96,7 +96,7 @@ impl<'a> Stream<'a> {
   ///
   /// # Error
   ///
-  /// If an error occurs during this I/O operation, then it should fail! the
+  /// If an error occurs during this I/O operation, then it should panic! the
   /// task. Note that skipping 0 bytes is not considered an error.
   pub fn try_skip(&mut self, amount: uint) -> Option<uint> {
     if self.position == self.length {
@@ -121,7 +121,7 @@ impl<'a> Stream<'a> {
     let length = buffer.len();
 
     if self.read_at_least(length, buffer) != length {
-      fail!("Stream: Unexpected length (BUG)");
+      panic!("Stream: Unexpected length (BUG)");
     }
   }
 
@@ -131,9 +131,9 @@ impl<'a> Stream<'a> {
 
     while skipped < amount {
       match self.try_skip(amount) {
-        Some(0) => fail!("Stream: Not progressing (TODO)"),
+        Some(0) => panic!("Stream: Not progressing (TODO)"),
         Some(n) => skipped += n,
-        None => fail!("Stream: Unexpected EOF (INPUT)")
+        None => panic!("Stream: Unexpected EOF (INPUT)")
       }
     }
   }
@@ -144,15 +144,15 @@ impl<'a> Stream<'a> {
   /// This will continue to call `try_read` until at least `min` bytes have been
   /// read.
   pub fn read_at_least(&mut self, min: uint, buffer: &mut [u8]) -> uint {
-    if min > buffer.len() { fail!("Stream: The buffer is too short (ARGUMENT)") }
+    if min > buffer.len() { panic!("Stream: The buffer is too short (ARGUMENT)") }
 
     let mut read = 0;
 
     while read < min {
       match self.try_read(buffer.slice_from_mut(read)) {
-        Some(0) => fail!("Stream: Not progressing (TODO)"),
+        Some(0) => panic!("Stream: Not progressing (TODO)"),
         Some(n) => read += n,
-        None => fail!("Stream: Unexpected EOF (INPUT)")
+        None => panic!("Stream: Unexpected EOF (INPUT)")
       }
     }
 
@@ -331,7 +331,7 @@ impl<'a> Bitstream<'a> {
 
   pub fn read_n(&mut self, n: uint) -> u32 {
     if n > 32 {
-      fail!("Bitstream: You cannot request more than 32 bits into a u32 (ARGUMENT)");
+      panic!("Bitstream: You cannot request more than 32 bits into a u32 (ARGUMENT)");
     }
 
     if n <= self.cache_length {

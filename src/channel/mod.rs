@@ -40,7 +40,7 @@ impl<T> Source<T> {
   pub fn read(&mut self, f: |&T|) {
     if self.channel.rc_write.load(sync::atomic::SeqCst) == 0 {
       if self.channel.read.load(sync::atomic::SeqCst) == self.channel.write.load(sync::atomic::SeqCst) {
-        fail!("Sink: Source is dropped")
+        panic!("Sink: Source is dropped")
       }
     }
 
@@ -80,7 +80,7 @@ impl<T: Initialize> Sink<T> {
   /// Fails if there is no Source.
   pub fn write(&mut self, f: |&mut T|) {
     if self.channel.rc_read.load(sync::atomic::SeqCst) == 0 {
-      fail!("Sink: Source is dropped")
+      panic!("Sink: Source is dropped")
     }
 
     self.channel.not_full.acquire();
