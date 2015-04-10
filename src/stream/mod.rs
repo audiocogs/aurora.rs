@@ -212,7 +212,7 @@ impl<'a> Stream<'a> {
   pub fn read_ne_u64(&mut self) -> u64 {
     let mut buffer = [0; 8];
 
-    self.read(buffer);
+    self.read(&mut buffer);
 
     return unsafe { mem::transmute::<[u8; 8], [u64; 1]>(buffer) }[0];
   }
