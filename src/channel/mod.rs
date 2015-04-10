@@ -37,7 +37,7 @@ impl<T> Source<T> {
   /// Attempts to read a value from the sink, blocking if it is empty
   ///
   /// Fails if there is no Sink, and no data left to read.
-  pub fn read(&mut self, f: |&T|) {
+  pub fn read(&mut self, f: Fn(T)) {
     if self.channel.rc_write.load(sync::atomic::SeqCst) == 0 {
       if self.channel.read.load(sync::atomic::SeqCst) == self.channel.write.load(sync::atomic::SeqCst) {
         panic!("Sink: Source is dropped")
@@ -78,7 +78,7 @@ impl<T: Initialize> Sink<T> {
   /// Attempts to write a value to the sink, blocking if it is full.
   ///
   /// Fails if there is no Source.
-  pub fn write(&mut self, f: |&mut T|) {
+  pub fn write(&mut self, f: FnMut(T)) {
     if self.channel.rc_read.load(sync::atomic::SeqCst) == 0 {
       panic!("Sink: Source is dropped")
     }
@@ -136,7 +136,7 @@ pub fn create<T: super::Initialize>(capacity: uint) -> (Sink<T>, Source<T>) {
 
 #[cfg(test)]
 mod tests {
-  struct Test { value: uint }
+  struct Test { value: usize }
 
   impl ::Initialize for Test {
     fn initialize() -> Test {
@@ -160,7 +160,7 @@ mod tests {
   fn test_threads() {
     let (mut sink, mut source) = super::create::<Test>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       sink.write(|x: &mut Test| { x.value = 1 });
     });
 
@@ -182,7 +182,7 @@ mod tests {
   fn test_source_gone_threads() {
     let (mut sink, mut source) = super::create::<Test>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       source.read(|x: &Test| { assert_eq!(x.value, 1) });
     });
 
@@ -193,13 +193,13 @@ mod tests {
   fn test_source_works() {
     let (mut sink, mut source) = super::create::<Test>(1);
 
-    spawn(proc() {
-      for i in range(0u, 10000) {
+    thread::spawn(|| {
+      for i in 0us..10000 {
         sink.write(|x: &mut Test| { x.value = i })
       }
     });
 
-    for i in range(0u, 10000) {
+    for i in 0us..10000 {
       source.read(|x: &Test| { assert_eq!(x.value, i) });
     }
   }
