@@ -283,7 +283,7 @@ impl<'a> Stream<'a> {
 
       let mut result = 0u64;
 
-      for i in range(0, n) {
+      for i in 0..n {
         result = result | ((self.read_u8() as u64) << (8 * i));
       }
 
@@ -305,7 +305,7 @@ impl<'a> Stream<'a> {
 
     let mut result = 0u64;
 
-    for i in range(0, n) {
+    for i in 0..n {
       result = result | ((self.read_u8() as u64) << (8 * (n - i - 1)));
     }
 
