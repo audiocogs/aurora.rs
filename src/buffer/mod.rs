@@ -55,7 +55,7 @@ mod tests {
   fn test_read_zero() {
     let (sink, mut source) = channel::create::<::Binary>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       super::Buffer::new(vec![0u8], 4096, sink).run();
     });
 
@@ -70,7 +70,7 @@ mod tests {
   fn test_read_null() {
     let (sink, mut source) = channel::create::<::Binary>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       super::Buffer::new(vec![], 4096, sink).run();
     });
 
