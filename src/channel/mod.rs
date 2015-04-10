@@ -5,23 +5,22 @@ use super::Initialize;
 use std::mem;
 
 use std::ptr;
-use std::ptr::{RawPtr,RawMutPtr};
 
 use std::sync;
 use std::sync::{Arc,Semaphore};
-use std::sync::atomic::AtomicInt;
+use std::sync::atomic::{AtomicIsize, Ordering};
 
 struct Channel<T> {
-  rc_read: AtomicInt, rc_write: AtomicInt,
-  data: int, capacity: int,
-  read: AtomicInt, write: AtomicInt,
+  rc_read: AtomicIsize, rc_write: AtomicIsize,
+  data: isize, capacity: isize,
+  read: AtomicIsize, write: AtomicIsize,
   not_empty: Semaphore, not_full: Semaphore
 }
 
 #[unsafe_destructor]
 impl<T> Drop for Channel<T> {
   fn drop(&mut self) {
-    unsafe { alloc::heap::deallocate(self.data as *mut u8, self.capacity as uint * mem::size_of::<T>(), mem::align_of::<T>()) };
+    unsafe { alloc::heap::deallocate(self.data as *mut u8, self.capacity as usize * mem::size_of::<T>(), mem::align_of::<T>()) };
   }
 }
 
@@ -38,8 +37,8 @@ impl<T> Source<T> {
   ///
   /// Fails if there is no Sink, and no data left to read.
   pub fn read(&mut self, f: Fn(T)) {
-    if self.channel.rc_write.load(sync::atomic::SeqCst) == 0 {
-      if self.channel.read.load(sync::atomic::SeqCst) == self.channel.write.load(sync::atomic::SeqCst) {
+    if self.channel.rc_write.load(Ordering::SeqCst) == 0 {
+      if self.channel.read.load(Ordering::SeqCst) == self.channel.write.load(Ordering::SeqCst) {
         panic!("Sink: Source is dropped")
       }
     }
@@ -47,8 +46,8 @@ impl<T> Source<T> {
     self.channel.not_empty.acquire();
 
     unsafe {
-      let offset = self.channel.read.fetch_add(1, sync::atomic::SeqCst) % self.channel.capacity;
-      let ptr = mem::transmute::<int, *mut T>(self.channel.data).offset(offset);
+      let offset = self.channel.read.fetch_add(1, Ordering::SeqCst) % self.channel.capacity;
+      let ptr = mem::transmute::<isize, *mut T>(self.channel.data).offset(offset);
       let data = ptr.as_ref().unwrap();
 
       f(data);
@@ -61,7 +60,7 @@ impl<T> Source<T> {
 #[unsafe_destructor]
 impl<T> Drop for Source<T> {
   fn drop(&mut self) {
-    self.channel.rc_read.fetch_sub(1, sync::atomic::SeqCst);
+    self.channel.rc_read.fetch_sub(1, Ordering::SeqCst);
   }
 }
 
@@ -79,15 +78,15 @@ impl<T: Initialize> Sink<T> {
   ///
   /// Fails if there is no Source.
   pub fn write(&mut self, f: FnMut(T)) {
-    if self.channel.rc_read.load(sync::atomic::SeqCst) == 0 {
+    if self.channel.rc_read.load(Ordering::SeqCst) == 0 {
       panic!("Sink: Source is dropped")
     }
 
     self.channel.not_full.acquire();
 
     unsafe {
-      let offset = self.channel.write.fetch_add(1, sync::atomic::SeqCst) % self.channel.capacity;
-      let ptr = mem::transmute::<int, *mut T>(self.channel.data).offset(offset);
+      let offset = self.channel.write.fetch_add(1, Ordering::SeqCst) % self.channel.capacity;
+      let ptr = mem::transmute::<isize, *mut T>(self.channel.data).offset(offset);
       let data = ptr.as_mut().unwrap();
 
       data.reinitialize();
@@ -102,16 +101,16 @@ impl<T: Initialize> Sink<T> {
 #[unsafe_destructor]
 impl<T> Drop for Sink<T> {
   fn drop(&mut self) {
-    self.channel.rc_write.fetch_sub(1, sync::atomic::SeqCst);
+    self.channel.rc_write.fetch_sub(1, Ordering::SeqCst);
   }
 }
 
-pub fn create<T: super::Initialize>(capacity: uint) -> (Sink<T>, Source<T>) {
+pub fn create<T: super::Initialize>(capacity: usize) -> (Sink<T>, Source<T>) {
   let data = unsafe {
     alloc::heap::allocate(capacity * mem::size_of::<T>(), mem::align_of::<T>())
   };
   
-  for offset in range(0, capacity as int) {
+  for offset in 0..(capacity as isize) {
     unsafe {
       let ptr = mem::transmute::<*mut u8, *mut T>(data).offset(offset);
 
@@ -122,10 +121,10 @@ pub fn create<T: super::Initialize>(capacity: uint) -> (Sink<T>, Source<T>) {
   }
 
   let channel = Arc::new(Channel {
-    rc_read: AtomicInt::new(1), rc_write: AtomicInt::new(1),
-    data: unsafe { mem::transmute(data) }, capacity: capacity as int,
-    read: AtomicInt::new(0), write: AtomicInt::new(0),
-    not_empty: Semaphore::new(0), not_full: Semaphore::new(capacity as int)
+    rc_read: AtomicIsize::new(1), rc_write: AtomicIsize::new(1),
+    data: unsafe { mem::transmute(data) }, capacity: capacity as isize,
+    read: AtomicIsize::new(0), write: AtomicIsize::new(0),
+    not_empty: Semaphore::new(0), not_full: Semaphore::new(capacity as isize)
   });
 
   let sink = Sink::<T>::new(channel.clone());
