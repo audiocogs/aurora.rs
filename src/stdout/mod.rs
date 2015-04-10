@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Write;
 
 use channel;
 
@@ -13,11 +14,11 @@ impl Output {
 
   pub fn run(&mut self) {
     let mut last = false;
-    let mut stdout = io::stdio::stdout();
+    let mut stdout = io::stdout();
 
     while !last {
       self.source.read(|binary| {
-        stdout.write(binary.data.as_slice()).unwrap();
+        stdout.write(&binary.data).unwrap();
 
         last = binary.last;
       });

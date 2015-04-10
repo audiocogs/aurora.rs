@@ -91,7 +91,7 @@ impl Muxer {
         sink.write(|binary| {
           binary.data.reserve(audio.data.len());
 
-          std::slice::bytes::copy_memory(binary.data.as_mut_slice(), audio.data.as_slice());
+          std::slice::bytes::copy_memory(&audio.data, &mut binary.data);
 
           binary.last = last;
         });

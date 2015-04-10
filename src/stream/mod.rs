@@ -45,10 +45,10 @@ impl<'a> Stream<'a> {
         b.reserve(len - l);
       }
 
-      let input = binary.data.slice(0, len);
-      let output = b.slice_mut(0, len);
+      let input = &binary.data[0..len];
+      let output = &mut b[0..len];
 
-      std::slice::bytes::copy_memory(output, input);
+      std::slice::bytes::copy_memory(input, output);
     });
 
     self.position = 0;
@@ -76,12 +76,12 @@ impl<'a> Stream<'a> {
     let write_len = std::cmp::min(buffer.len(), self.buffer.len() - self.position);
 
     {
-        let input = self.buffer.slice(self.position, self.position + write_len);
-        let output = buffer.slice_mut(0, write_len);
+        let input = &self.buffer[self.position..self.position + write_len];
+        let output = &mut buffer[0..write_len];
 
         assert_eq!(input.len(), output.len());
 
-        std::slice::bytes::copy_memory(output, input);
+        std::slice::bytes::copy_memory(input, output);
     }
 
     self.position += write_len;
@@ -172,7 +172,7 @@ impl<'a> Stream<'a> {
 
   /// Reads a native endian u16
   pub fn read_ne_u16(&mut self) -> u16 {
-    let mut buffer = [0, ..2];
+    let mut buffer = [0; 2];
 
     self.read(buffer);
 
@@ -191,7 +191,7 @@ impl<'a> Stream<'a> {
 
   /// Reads a native endian u32
   pub fn read_ne_u32(&mut self) -> u32 {
-    let mut buffer = [0, ..4];
+    let mut buffer = [0; 4];
 
     self.read(buffer);
 
@@ -210,7 +210,7 @@ impl<'a> Stream<'a> {
 
   /// Reads a native endian u64
   pub fn read_ne_u64(&mut self) -> u64 {
-    let mut buffer = [0, ..8];
+    let mut buffer = [0; 8];
 
     self.read(buffer);
 

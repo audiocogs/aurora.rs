@@ -32,10 +32,10 @@ impl Buffer {
         }
 
         {
-          let input = b.slice(start, end);
-          let output = binary.data.slice_mut(0, write_len);
+          let input = &b[start..end];
+          let output = &mut binary.data[0..write_len];
 
-          std::slice::bytes::copy_memory(output, input);
+          std::slice::bytes::copy_memory(input, output);
         }
 
         binary.data.truncate(write_len);

@@ -1,4 +1,5 @@
 use std;
+use std::io::Write;
 
 use channel;
 
@@ -50,7 +51,7 @@ impl Output {
 
     while !last {
       self.source.read(|binary| {
-        f.write(binary.data.as_slice()).unwrap();
+        f.write(&binary.data).unwrap();
 
         last = binary.last;
       });
