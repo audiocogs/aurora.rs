@@ -34,11 +34,11 @@ impl Muxer {
 
             d.grow(8, 0);
 
-            std::slice::bytes::copy_memory(d.slice_mut( 0,  4), b"caff");
+            std::slice::bytes::copy_memory(&mut d[0..4], b"caff");
 
             unsafe {
-              std::slice::bytes::copy_memory(d.slice_mut( 4,  6), std::mem::transmute::<u16, [u8; 2]>(1u16.to_be()));
-              std::slice::bytes::copy_memory(d.slice_mut( 6,  8), std::mem::transmute::<u16, [u8; 2]>(0u16.to_be()));
+              std::slice::bytes::copy_memory(&mut d[4..6], std::mem::transmute::<u16, [u8; 2]>(1u16.to_be()));
+              std::slice::bytes::copy_memory(&mut d[6..8], std::mem::transmute::<u16, [u8; 2]>(0u16.to_be()));
             }
           });
 
@@ -47,30 +47,30 @@ impl Muxer {
 
             d.grow(44, 0);
             
-            std::slice::bytes::copy_memory(d.slice_mut( 0, 4), b"desc");
+            std::slice::bytes::copy_memory(&mut d[0..4], b"desc");
 
             unsafe {
-              std::slice::bytes::copy_memory(d.slice_mut(4, 12), std::mem::transmute::<i64, [u8; 8]>(32i64.to_be()));
+              std::slice::bytes::copy_memory(&mut d[4..12], std::mem::transmute::<i64, [u8; 8]>(32i64.to_be()));
               
               let sample_rate = std::mem::transmute::<f64, u64>(audio.sample_rate).to_be();
-              std::slice::bytes::copy_memory(d.slice_mut(12, 20), std::mem::transmute::<u64, [u8; 8]>(sample_rate));
+              std::slice::bytes::copy_memory(&mut d[12..20], std::mem::transmute::<u64, [u8; 8]>(sample_rate));
               
-              std::slice::bytes::copy_memory(d.slice_mut(20, 24), b"lpcm");
+              std::slice::bytes::copy_memory(&mut d[20..24], b"lpcm");
               
               let mut format_flags = 0u32;
 
               if let ::sample_type::SampleType::Float(_) = audio.sample_type { format_flags |= 1 };
               if audio.endian == ::endian::Endian::Little { format_flags |= 2; };
 
-              std::slice::bytes::copy_memory(d.slice_mut(24, 28), std::mem::transmute::<u32, [u8; 4]>(format_flags.to_be()));
+              std::slice::bytes::copy_memory(&mut d[24..28], std::mem::transmute::<u32, [u8; 4]>(format_flags.to_be()));
 
               let bytes_per_packet = (::sample_type::size(audio.sample_type) * audio.channels / 8) as u32;
 
-              std::slice::bytes::copy_memory(d.slice_mut(28, 32), std::mem::transmute::<u32, [u8; 4]>(bytes_per_packet.to_be()));
-              std::slice::bytes::copy_memory(d.slice_mut(32, 36), std::mem::transmute::<u32, [u8; 4]>(1u32.to_be()));
+              std::slice::bytes::copy_memory(&mut d[28..32], std::mem::transmute::<u32, [u8; 4]>(bytes_per_packet.to_be()));
+              std::slice::bytes::copy_memory(&mut d[32..36], std::mem::transmute::<u32, [u8; 4]>(1u32.to_be()));
 
-              std::slice::bytes::copy_memory(d.slice_mut(36, 40), std::mem::transmute::<u32, [u8; 4]>((audio.channels as u32).to_be()));
-              std::slice::bytes::copy_memory(d.slice_mut(40, 44), std::mem::transmute::<u32, [u8; 4]>((::sample_type::size(audio.sample_type) as u32).to_be()));
+              std::slice::bytes::copy_memory(&mut d[36..40], std::mem::transmute::<u32, [u8; 4]>((audio.channels as u32).to_be()));
+              std::slice::bytes::copy_memory(&mut d[40..44], std::mem::transmute::<u32, [u8; 4]>((::sample_type::size(audio.sample_type) as u32).to_be()));
             }
           });
 
@@ -79,8 +79,8 @@ impl Muxer {
 
             d.grow(12, 0);
 
-            std::slice::bytes::copy_memory(d.slice_mut(0, 4), b"data");
-            std::slice::bytes::copy_memory(d.slice_mut(4, 12), &[0xFFu8; 8]);
+            std::slice::bytes::copy_memory(&mut d[0..4], b"data");
+            std::slice::bytes::copy_memory(&mut d[4..12], &[0xFFu8; 8]);
           });
 
           first = false;
