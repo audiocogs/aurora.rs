@@ -46,10 +46,10 @@ pub mod sample_type {
 
   pub fn size(t: SampleType) -> usize {
     return match t {
-      Unknown => 0,
-      Unsigned(n) => n,
-      Signed(n) => n,
-      Float(n) => n
+      SampleType::Unknown => 0,
+      SampleType::Unsigned(n) => n,
+      SampleType::Signed(n) => n,
+      SampleType::Float(n) => n
     };
   }
 }
@@ -69,8 +69,8 @@ impl Initialize for Audio {
       last: false,
       channels: 0,
       sample_rate: 0.0,
-      endian: endian::Big,
-      sample_type: sample_type::Unknown,
+      endian: endian::Endian::Big,
+      sample_type: sample_type::SampleType::Unknown,
       data: Vec::with_capacity(4096)
     };
   }
@@ -79,8 +79,8 @@ impl Initialize for Audio {
     self.last = false;
     self.channels = 0;
     self.sample_rate = 0.0;
-    self.endian = endian::Big;
-    self.sample_type = sample_type::Unknown;
+    self.endian = endian::Endian::Big;
+    self.sample_type = sample_type::SampleType::Unknown;
     self.data.truncate(0);
   }
 }

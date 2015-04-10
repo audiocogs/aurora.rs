@@ -25,7 +25,7 @@ impl Muxer {
     while !last {
       source.read(|audio| {
         if first {
-          if let ::sample_type::Unknown = audio.sample_type {
+          if let ::sample_type::SampleType::Unknown = audio.sample_type {
             panic!("caf::Muxer: Unknown sample type");
           }
 
@@ -59,8 +59,8 @@ impl Muxer {
               
               let mut format_flags = 0u32;
 
-              if let ::sample_type::Float(_) = audio.sample_type { format_flags |= 1 };
-              if audio.endian == ::endian::Little { format_flags |= 2; };
+              if let ::sample_type::SampleType::Float(_) = audio.sample_type { format_flags |= 1 };
+              if audio.endian == ::endian::Endian::Little { format_flags |= 2; };
 
               std::slice::bytes::copy_memory(d.slice_mut(24, 28), std::mem::transmute::<u32, [u8; 4]>(format_flags.to_be()));
 
