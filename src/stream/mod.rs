@@ -151,7 +151,7 @@ impl<'a> Stream<'a> {
     let mut read = 0;
 
     while read < min {
-      match self.try_read(buffer.slice_from_mut(read)) {
+      match self.try_read(&mut buffer[read..]) {
         Some(0) => panic!("Stream: Not progressing (TODO)"),
         Some(n) => read += n,
         None => panic!("Stream: Unexpected EOF (INPUT)")
