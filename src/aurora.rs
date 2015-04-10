@@ -32,14 +32,14 @@ impl Initialize for Binary {
 }
 
 pub mod endian {
-  #[deriving(Show,PartialEq)]
+  #[derive(Debug,PartialEq)]
   pub enum Endian {
     Big, Little
   }
 }
 
 pub mod sample_type {
-  #[deriving(Show,PartialEq)]
+  #[derive(Debug,PartialEq)]
   pub enum SampleType {
     Unknown, Unsigned(uint), Signed(uint), Float(uint)
   }
