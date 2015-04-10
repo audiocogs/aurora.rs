@@ -39,7 +39,8 @@ impl<T> Source<T> {
   /// Attempts to read a value from the sink, blocking if it is empty
   ///
   /// Fails if there is no Sink, and no data left to read.
-  pub fn read(&mut self, f: Fn(T)) {
+  pub fn read<F>(&mut self, f: F)
+      where F: Fn(T) {
     if self.channel.rc_write.load(Ordering::SeqCst) == 0 {
       if self.channel.read.load(Ordering::SeqCst) == self.channel.write.load(Ordering::SeqCst) {
         panic!("Sink: Source is dropped")
@@ -80,7 +81,8 @@ impl<T: Initialize> Sink<T> {
   /// Attempts to write a value to the sink, blocking if it is full.
   ///
   /// Fails if there is no Source.
-  pub fn write(&mut self, f: FnMut(T)) {
+  pub fn write<F>(&mut self, f: F)
+      where F : FnMut(T) {
     if self.channel.rc_read.load(Ordering::SeqCst) == 0 {
       panic!("Sink: Source is dropped")
     }
