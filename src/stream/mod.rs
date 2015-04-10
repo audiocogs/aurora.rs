@@ -165,7 +165,7 @@ impl<'a> Stream<'a> {
   pub fn read_u8(&mut self) -> u8 {
     let mut buffer = [0];
 
-    self.read(buffer);
+    self.read(&mut buffer);
 
     return buffer[0];
   }
@@ -174,7 +174,7 @@ impl<'a> Stream<'a> {
   pub fn read_ne_u16(&mut self) -> u16 {
     let mut buffer = [0; 2];
 
-    self.read(buffer);
+    self.read(&mut buffer);
 
     return unsafe { mem::transmute::<[u8; 2], [u16; 1]>(buffer) }[0];
   }
@@ -193,7 +193,7 @@ impl<'a> Stream<'a> {
   pub fn read_ne_u32(&mut self) -> u32 {
     let mut buffer = [0; 4];
 
-    self.read(buffer);
+    self.read(&mut buffer);
 
     return unsafe { mem::transmute::<[u8; 4], [u32; 1]>(buffer) }[0];
   }
