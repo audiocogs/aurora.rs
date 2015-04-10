@@ -168,7 +168,7 @@ mod tests {
   }
 
   #[test]
-  #[should_fail]
+  #[should_panic]
   fn test_source_gone() {
     let (mut sink, source) = super::create::<Test>(1);
 
@@ -178,7 +178,7 @@ mod tests {
   }
 
   #[test]
-  #[should_fail]
+  #[should_panic]
   fn test_source_gone_threads() {
     let (mut sink, mut source) = super::create::<Test>(1);
 
