@@ -67,10 +67,10 @@ mod tests {
   fn test_read_zero() {
     let (sink, mut source) = channel::create::<::Binary>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       let path = std::path::Path::new("/dev/zero");
       let file = std::io::File::open(&path).unwrap();
-      
+
       super::Input::new(file, 4096, sink).run();
     });
 
@@ -78,7 +78,7 @@ mod tests {
       assert_eq!(binary.last, false);
       assert_eq!(binary.data.len(), 4096);
 
-      for i in range(0u, 4096) {
+      for i in 0us..4096 {
         assert_eq!(binary.data[i], 0);
       }
     });
@@ -88,10 +88,10 @@ mod tests {
   fn test_read_null() {
     let (sink, mut source) = channel::create::<::Binary>(1);
 
-    spawn(proc() {
+    thread::spawn(|| {
       let path = std::path::Path::new("/dev/null");
       let file = std::io::File::open(&path).unwrap();
-      
+
       super::Input::new(file, 4096, sink).run();
     });
 
