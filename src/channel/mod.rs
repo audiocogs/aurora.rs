@@ -10,11 +10,14 @@ use std::sync;
 use std::sync::{Arc,Semaphore};
 use std::sync::atomic::{AtomicIsize, Ordering};
 
+use std::marker::PhantomData;
+
 struct Channel<T> {
   rc_read: AtomicIsize, rc_write: AtomicIsize,
   data: isize, capacity: isize,
   read: AtomicIsize, write: AtomicIsize,
-  not_empty: Semaphore, not_full: Semaphore
+  not_empty: Semaphore, not_full: Semaphore,
+  phantom: PhantomData<T>
 }
 
 #[unsafe_destructor]
