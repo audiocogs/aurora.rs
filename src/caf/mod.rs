@@ -80,7 +80,7 @@ impl Muxer {
             d.grow(12, 0);
 
             std::slice::bytes::copy_memory(d.slice_mut(0, 4), b"data");
-            std::slice::bytes::copy_memory(d.slice_mut(4, 12), &[0xFFu8, ..8]);
+            std::slice::bytes::copy_memory(d.slice_mut(4, 12), &[0xFFu8; 8]);
           });
 
           first = false;
