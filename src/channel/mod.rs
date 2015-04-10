@@ -127,7 +127,8 @@ pub fn create<T: super::Initialize>(capacity: usize) -> (Sink<T>, Source<T>) {
     rc_read: AtomicIsize::new(1), rc_write: AtomicIsize::new(1),
     data: unsafe { mem::transmute(data) }, capacity: capacity as isize,
     read: AtomicIsize::new(0), write: AtomicIsize::new(0),
-    not_empty: Semaphore::new(0), not_full: Semaphore::new(capacity as isize)
+    not_empty: Semaphore::new(0), not_full: Semaphore::new(capacity as isize),
+    phantom: PhantomData
   });
 
   let sink = Sink::<T>::new(channel.clone());
