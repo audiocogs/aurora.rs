@@ -3,11 +3,11 @@ use std;
 use channel;
 
 pub struct Buffer {
-  buffer: Vec<u8>, position: uint, chunk: uint, sink: channel::Sink<super::Binary>
+  buffer: Vec<u8>, position: usize, chunk: usize, sink: channel::Sink<super::Binary>
 }
 
 impl Buffer {
-  pub fn new(buffer: Vec<u8>, chunk: uint, sink: channel::Sink<super::Binary>) -> Buffer {
+  pub fn new(buffer: Vec<u8>, chunk: usize, sink: channel::Sink<super::Binary>) -> Buffer {
     return Buffer { buffer: buffer, position: 0, chunk: chunk, sink: sink };
   }
 

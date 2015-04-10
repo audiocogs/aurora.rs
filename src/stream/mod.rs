@@ -5,8 +5,8 @@ use channel;
 
 pub struct Stream<'a> {
   last: bool,
-  position: uint,
-  length: uint,
+  position: usize,
+  length: usize,
   buffer: Vec<u8>,
   source: &'a mut channel::Source<super::Binary>
 }
@@ -62,7 +62,7 @@ impl<'a> Stream<'a> {
   ///
   /// If an error occurs during this I/O operation, then it should panic! the
   /// task. Note that reading 0 bytes is not considered an error.
-  pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<uint> {
+  pub fn try_read(&mut self, buffer: &mut [u8]) -> Option<usize> {
     if self.position == self.length {
       if self.last {
         return None;
@@ -98,7 +98,7 @@ impl<'a> Stream<'a> {
   ///
   /// If an error occurs during this I/O operation, then it should panic! the
   /// task. Note that skipping 0 bytes is not considered an error.
-  pub fn try_skip(&mut self, amount: uint) -> Option<uint> {
+  pub fn try_skip(&mut self, amount: usize) -> Option<usize> {
     if self.position == self.length {
       if self.last {
         return None;
@@ -126,7 +126,7 @@ impl<'a> Stream<'a> {
   }
 
   /// Skips exactly `amount` bytes.
-  pub fn skip(&mut self, amount: uint) {
+  pub fn skip(&mut self, amount: usize) {
     let mut skipped = 0;
 
     while skipped < amount {
@@ -143,7 +143,7 @@ impl<'a> Stream<'a> {
   ///
   /// This will continue to call `try_read` until at least `min` bytes have been
   /// read.
-  pub fn read_at_least(&mut self, min: uint, buffer: &mut [u8]) -> uint {
+  pub fn read_at_least(&mut self, min: usize, buffer: &mut [u8]) -> usize {
     if min > buffer.len() { panic!("Stream: The buffer is too short (ARGUMENT)") }
 
     let mut read = 0;
@@ -278,7 +278,7 @@ impl<'a> Stream<'a> {
   /// Reads `n` little-endian unsigned integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  pub fn read_le_uint_n(&mut self, n: uint) -> u64 {
+  pub fn read_le_usize_n(&mut self, n: usize) -> u64 {
       assert!(n > 0 && n <= 8);
 
       let mut result = 0u64;
@@ -293,14 +293,14 @@ impl<'a> Stream<'a> {
   /// Reads `n` little-endian signed integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  pub fn read_le_int_n(&mut self, n: uint) -> i64 {
-    return extend_sign(self.read_le_uint_n(n), n);
+  pub fn read_le_int_n(&mut self, n: usize) -> i64 {
+    return extend_sign(self.read_le_usize_n(n), n);
   }
 
   /// Reads `n` big-endian unsigned integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  pub fn read_be_uint_n(&mut self, n: uint) -> u64 {
+  pub fn read_be_usize_n(&mut self, n: usize) -> u64 {
     assert!(n > 0 && n <= 8);
 
     let mut result = 0u64;
@@ -315,13 +315,13 @@ impl<'a> Stream<'a> {
   /// Reads `n` big-endian signed integer bytes.
   ///
   /// `n` must be between 1 and 8, inclusive.
-  pub fn read_be_int_n(&mut self, n: uint) -> i64 {
-    return extend_sign(self.read_be_uint_n(n), n);
+  pub fn read_be_int_n(&mut self, n: usize) -> i64 {
+    return extend_sign(self.read_be_usize_n(n), n);
   }
 }
 
 pub struct Bitstream<'a> {
-  pub cache: u8, pub cache_length: uint, stream: &'a mut Stream<'a>
+  pub cache: u8, pub cache_length: usize, stream: &'a mut Stream<'a>
 }
 
 impl<'a> Bitstream<'a> {
@@ -329,7 +329,7 @@ impl<'a> Bitstream<'a> {
     return Bitstream { cache: 0, cache_length: 0, stream: stream };
   }
 
-  pub fn read_n(&mut self, n: uint) -> u32 {
+  pub fn read_n(&mut self, n: usize) -> u32 {
     if n > 32 {
       panic!("Bitstream: You cannot request more than 32 bits into a u32 (ARGUMENT)");
     }
@@ -345,7 +345,7 @@ impl<'a> Bitstream<'a> {
       let n_to_read = n - self.cache_length;
       let b_to_read = n_to_read / 8 + if n_to_read % 8 > 0 { 1 } else { 0 };
 
-      let read = self.stream.read_be_uint_n(b_to_read);
+      let read = self.stream.read_be_usize_n(b_to_read);
       let sum = ((self.cache as u64) << (b_to_read * 8)) | (read as u64);
 
       self.cache_length = b_to_read * 8 - n_to_read;
@@ -358,16 +358,16 @@ impl<'a> Bitstream<'a> {
     }
   }
 
-  pub fn read_n_signed(&mut self, n: uint) -> i32 {
+  pub fn read_n_signed(&mut self, n: usize) -> i32 {
     return extend_sign_bits(self.read_n(n) as u64, n) as i32;
   }
 }
 
-fn extend_sign(value: u64, n: uint) -> i64 {
+fn extend_sign(value: u64, n: usize) -> i64 {
   return extend_sign_bits(value, n * 8);
 }
 
-fn extend_sign_bits(value: u64, n: uint) -> i64 {
+fn extend_sign_bits(value: u64, n: usize) -> i64 {
   let shift = 64 - n;
 
   return (value << shift) as i64 >> shift;
@@ -468,22 +468,22 @@ mod tests {
     let mut source = prepare!(vec![0x00u8, 0x01, 0x02, 0x03]);
     let mut s = Stream::new(&mut source);
 
-    assert_eq!(s.read_le_uint_n(2), 0x0100);
-    assert_eq!(s.read_be_uint_n(2), 0x0203);
+    assert_eq!(s.read_le_usize_n(2), 0x0100);
+    assert_eq!(s.read_be_usize_n(2), 0x0203);
 
     let mut source = prepare!(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
     let mut s = Stream::new(&mut source);
 
-    assert_eq!(s.read_le_uint_n(1), 0x00);
-    assert_eq!(s.read_le_uint_n(2), 0x0201);
-    assert_eq!(s.read_le_uint_n(3), 0x050403);
+    assert_eq!(s.read_le_usize_n(1), 0x00);
+    assert_eq!(s.read_le_usize_n(2), 0x0201);
+    assert_eq!(s.read_le_usize_n(3), 0x050403);
 
     let mut source = prepare!(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
     let mut s = Stream::new(&mut source);
 
-    assert_eq!(s.read_be_uint_n(1), 0x00);
-    assert_eq!(s.read_be_uint_n(2), 0x0102);
-    assert_eq!(s.read_be_uint_n(3), 0x030405);
+    assert_eq!(s.read_be_usize_n(1), 0x00);
+    assert_eq!(s.read_be_usize_n(2), 0x0102);
+    assert_eq!(s.read_be_usize_n(3), 0x030405);
   }
 
   #[test]
@@ -492,19 +492,19 @@ mod tests {
     let mut s = Stream::new(&mut source);
 
     s.skip(1);
-    assert_eq!(s.read_le_uint_n(3), 0x030201);
+    assert_eq!(s.read_le_usize_n(3), 0x030201);
 
     let mut source = prepare!(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
     let mut s = Stream::new(&mut source);
 
     s.skip(3);
-    assert_eq!(s.read_le_uint_n(3), 0x050403);
+    assert_eq!(s.read_le_usize_n(3), 0x050403);
 
     let mut source = prepare!(vec![0x00u8, 0x01, 0x02, 0x03, 0x04, 0x05]);
     let mut s = Stream::new(&mut source);
 
     s.skip(3);
-    assert_eq!(s.read_be_uint_n(3), 0x030405);
+    assert_eq!(s.read_be_usize_n(3), 0x030405);
   }
 
   #[test]

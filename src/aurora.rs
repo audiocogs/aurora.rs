@@ -41,10 +41,10 @@ pub mod endian {
 pub mod sample_type {
   #[derive(Debug,PartialEq)]
   pub enum SampleType {
-    Unknown, Unsigned(uint), Signed(uint), Float(uint)
+    Unknown, Unsigned(usize), Signed(usize), Float(usize)
   }
 
-  pub fn size(t: SampleType) -> uint {
+  pub fn size(t: SampleType) -> usize {
     return match t {
       Unknown => 0,
       Unsigned(n) => n,
@@ -56,7 +56,7 @@ pub mod sample_type {
 
 pub struct Audio {
   pub last: bool,
-  pub channels: uint,
+  pub channels: usize,
   pub sample_rate: f64,
   pub endian: endian::Endian,
   pub sample_type: sample_type::SampleType,

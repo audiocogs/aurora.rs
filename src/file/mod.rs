@@ -3,11 +3,11 @@ use std;
 use channel;
 
 pub struct Input {
-  file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>
+  file: std::io::File, chunk: usize, sink: channel::Sink<super::Binary>
 }
 
 impl Input {
-  pub fn new(file: std::io::File, chunk: uint, sink: channel::Sink<super::Binary>) -> Input {
+  pub fn new(file: std::io::File, chunk: usize, sink: channel::Sink<super::Binary>) -> Input {
     return Input { file: file, chunk: chunk, sink: sink };
   }
   
