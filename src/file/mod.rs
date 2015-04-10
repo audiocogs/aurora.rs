@@ -3,11 +3,11 @@ use std;
 use channel;
 
 pub struct Input {
-  file: std::io::File, chunk: usize, sink: channel::Sink<super::Binary>
+  file: std::fs::File, chunk: usize, sink: channel::Sink<super::Binary>
 }
 
 impl Input {
-  pub fn new(file: std::io::File, chunk: usize, sink: channel::Sink<super::Binary>) -> Input {
+  pub fn new(file: std::fs::File, chunk: usize, sink: channel::Sink<super::Binary>) -> Input {
     return Input { file: file, chunk: chunk, sink: sink };
   }
   
@@ -35,11 +35,11 @@ impl Input {
 }
 
 pub struct Output {
-  file: std::io::File, source: channel::Source<super::Binary>
+  file: std::fs::File, source: channel::Source<super::Binary>
 }
 
 impl Output {
-  pub fn new(file: std::io::File, source: channel::Source<super::Binary>) -> Output {
+  pub fn new(file: std::fs::File, source: channel::Source<super::Binary>) -> Output {
     return Output { file: file, source: source };
   }
 
@@ -69,7 +69,7 @@ mod tests {
 
     thread::spawn(|| {
       let path = std::path::Path::new("/dev/zero");
-      let file = std::io::File::open(&path).unwrap();
+      let file = std::fs::File::open(&path).unwrap();
 
       super::Input::new(file, 4096, sink).run();
     });
@@ -90,7 +90,7 @@ mod tests {
 
     thread::spawn(|| {
       let path = std::path::Path::new("/dev/null");
-      let file = std::io::File::open(&path).unwrap();
+      let file = std::fs::File::open(&path).unwrap();
 
       super::Input::new(file, 4096, sink).run();
     });
