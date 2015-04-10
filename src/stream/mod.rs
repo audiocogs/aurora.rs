@@ -174,7 +174,7 @@ impl<'a> Stream<'a> {
 
     self.read(buffer);
 
-    return unsafe { mem::transmute::<[u8, ..2], [u16, ..1]>(buffer) }[0];
+    return unsafe { mem::transmute::<[u8; 2], [u16; 1]>(buffer) }[0];
   }
 
   /// Reads a big endian u16.
@@ -193,7 +193,7 @@ impl<'a> Stream<'a> {
 
     self.read(buffer);
 
-    return unsafe { mem::transmute::<[u8, ..4], [u32, ..1]>(buffer) }[0];
+    return unsafe { mem::transmute::<[u8; 4], [u32; 1]>(buffer) }[0];
   }
 
   /// Reads a big endian u32.
@@ -212,7 +212,7 @@ impl<'a> Stream<'a> {
 
     self.read(buffer);
 
-    return unsafe { mem::transmute::<[u8, ..8], [u64, ..1]>(buffer) }[0];
+    return unsafe { mem::transmute::<[u8; 8], [u64; 1]>(buffer) }[0];
   }
 
   /// Reads a big endian u64.
@@ -380,17 +380,17 @@ mod tests {
   use channel;
   use buffer;
 
-  macro_rules! prepare(
+  macro_rules! prepare {
     ($buffer:expr) => ({
       let (sink, source) = channel::create::<::Binary>(1);
 
-      spawn(proc() {
+      thread::spawn(|| {
         buffer::Buffer::new($buffer, 4096, sink).run();
       });
 
       source
     });
-  )
+  }
 
   #[test]
   fn test_read_u8() {
