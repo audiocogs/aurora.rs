@@ -1,6 +1,8 @@
 use std;
 use std::mem;
 
+use std::num::Int;
+
 use channel;
 
 pub struct Stream<'a> {
