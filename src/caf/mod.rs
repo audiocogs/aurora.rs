@@ -32,7 +32,7 @@ impl Muxer {
           sink.write(|binary| {
             let d = &mut binary.data;
 
-            d.grow(8, 0);
+            d.reserve(8);
 
             std::slice::bytes::copy_memory(b"caff", &mut d[0..4]);
 
@@ -45,7 +45,7 @@ impl Muxer {
           sink.write(|binary| {
             let d = &mut binary.data;
 
-            d.grow(44, 0);
+            d.reserve(44);
             
             std::slice::bytes::copy_memory(b"desc", &mut d[0..4]);
 
@@ -77,7 +77,7 @@ impl Muxer {
           sink.write(|binary| {
             let d = &mut binary.data;
 
-            d.grow(12, 0);
+            d.reserve(12);
 
             std::slice::bytes::copy_memory(b"data", &mut d[0..4]);
             std::slice::bytes::copy_memory(&[0xFFu8; 8], &mut d[4..12]);
@@ -89,7 +89,7 @@ impl Muxer {
         last = audio.last;
 
         sink.write(|binary| {
-          binary.data.grow(audio.data.len(), 0);
+          binary.data.reserve(audio.data.len());
 
           std::slice::bytes::copy_memory(binary.data.as_mut_slice(), audio.data.as_slice());
 

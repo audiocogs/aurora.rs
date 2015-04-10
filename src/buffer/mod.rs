@@ -28,7 +28,7 @@ impl Buffer {
         let len = binary.data.len();
 
         if len < write_len {
-          binary.data.grow(write_len - len, 0);
+          binary.data.reserve(write_len - len);
         }
 
         {

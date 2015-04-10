@@ -42,7 +42,7 @@ impl<'a> Stream<'a> {
       let l = b.len();
 
       if l < len {
-        b.grow(len - l, 0);
+        b.reserve(len - l);
       }
 
       let input = binary.data.slice(0, len);
